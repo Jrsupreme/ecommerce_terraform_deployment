@@ -8,6 +8,14 @@ variable access_key {
     sensitive = true
 }
 
+variable "private_ec2_key" {
+  type = string
+  sensitive = true
+}
+
+variable "jenkins_pub_key" {
+  type = string
+}
 variable region {
 
 }
