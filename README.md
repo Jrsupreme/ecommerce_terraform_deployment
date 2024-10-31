@@ -52,22 +52,4 @@ This workload, "Workload 5," deploys a secure and highly available e-commerce ap
 
 This setup provides a resilient, scalable infrastructure, supporting dynamic application demands with secure access control and load distribution across multiple instances and availability zones.
 
-Workload 5
-
-install terraform and jenkins 
-
-Create an access key to work with terraform
-
-assign key and secret key a variable under sensitive in our variable.auto.tfvars
-
-Problem: Instances wouldn’t connect to the internet to download updates and packages. 
-
-Why? No egress rules in the security group
-
-Solution: Ensured that there was egress traffic allowed in the frontend security groups
-
-references
-
-aws meta data 
-
-[https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-retrieval.html](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-retrieval.html)
+OpenAI. (2024). ChatGPT (Month Day version) [Large language model]. https://chat.openai.com
