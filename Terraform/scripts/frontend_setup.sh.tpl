@@ -12,10 +12,10 @@ sleep 3
 cd /home/ubuntu/ecommerce_terraform_deployment/frontend
 
 # Modify package.json to set the proxy field
-sudo sed -i "s|\"proxy\": \"\"|\"proxy\": \"http://$BACKEND_PRIVATE_IP:8000\"|" package.json
+#sudo sed -i "s|\"proxy\": \"\"|\"proxy\": \"http://$BACKEND_PRIVATE_IP:8000\"|" package.json
 
 # Install frontend dependencies and start application
-npm install
+npm i
 
 export NODE_OPTIONS=--openssl-legacy-provider
 npm start

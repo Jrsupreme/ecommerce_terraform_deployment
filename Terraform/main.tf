@@ -14,6 +14,34 @@ resource "aws_vpc" "wl5vpc" {         # VPC
   }
 }
 
+data "aws_vpc" "default_vpc" {
+  id = var.default_vpc_id
+}
+
+resource "aws_vpc_peering_connection" "vpc_peering" {
+  vpc_id        = data.aws_vpc.default_vpc.id  
+  peer_vpc_id   = aws_vpc.wl5vpc.id             
+  auto_accept   = true  
+}
+
+resource "aws_route" "default_vpc_to_vpc" {
+  route_table_id         = var.default_route_table_id  # Main route table ID of the default VPC
+  destination_cidr_block = aws_vpc.wl5vpc.cidr_block
+  vpc_peering_connection_id = aws_vpc_peering_connection.vpc_peering.id
+}
+
+resource "aws_route" "public_to_default" {
+  route_table_id         = aws_route_table.public_route_table.id
+  destination_cidr_block = data.aws_vpc.default_vpc.cidr_block
+  vpc_peering_connection_id = aws_vpc_peering_connection.vpc_peering.id
+
+}
+
+resource "aws_route" "private_to_default" {
+  route_table_id = aws_route_table.private_route_table.id  # Replace with private route table ID
+  destination_cidr_block = data.aws_vpc.default_vpc.cidr_block
+  vpc_peering_connection_id = aws_vpc_peering_connection.vpc_peering.id
+}
 resource "aws_subnet" "public_subnet_1" {     # Public Subnets in two Availability Zones
   vpc_id                  = aws_vpc.wl5vpc.id
   cidr_block              = "10.0.0.0/24"
@@ -276,38 +304,7 @@ resource "aws_instance" "backend_server2" {    # Backend Server 2
     "Name" : "backend2"         
   }
   subnet_id = aws_subnet.private_subnet_2.id
-#   user_data = <<-EOF
-#     #!/bin/bash
 
-#     # Update and install required packages
-#     sudo apt update -y
-#     sudo apt install -y python3.9 python3.9-venv python3.9-dev git
-
-#     # Clone the repository to the /home/ubuntu directory
-#     git clone https://github.com/Jrsupreme/ecommerce_terraform_deployment.git /home/ubuntu/ecommerce_terraform_deployment
-
-#     # Navigate to the backend project directory
-#     cd /home/ubuntu/ecommerce_terraform_deployment/backend
-
-#     # Set up Python virtual environment and activate it
-#     python3.9 -m venv venv
-#     source venv/bin/activate
-
-#     # Install project dependencies
-#     pip install -r requirements.txt
-
-#     # Fetch the instance's private IP to configure Django settings
-#     PRIVATE_IP=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)
-
-#     # Modify ALLOWED_HOSTS in settings.py to allow access from the instance's private IP
-#     sed -i "s/ALLOWED_HOSTS = \[\]/ALLOWED_HOSTS = ['$PRIVATE_IP']/" my_project/settings.py
-
-#     # Apply Django migrations (to ensure database schema is up to date)
-#     python manage.py migrate
-
-#     # Start the Django development server
-#     python manage.py runserver 0.0.0.0:8000 &
-#  EOF
 }
 
 resource "aws_instance" "frontend_server1" {    # Frontend Server 1
@@ -320,72 +317,6 @@ resource "aws_instance" "frontend_server1" {    # Frontend Server 1
     "Name" : "frontend1"         
   }
   subnet_id = aws_subnet.public_subnet_1.id
-#  user_data = <<-EOF
-# #!/bin/bash
-
-# # Fetch the backend private IP dynamically
-# BACKEND_PRIVATE_IP="${aws_instance.backend_server1.private_ip}"
-# FRONTEND_PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
-# ec2_key="${var.private_ec2_key}"
-# jenkins_key="${var.jenkins_pub_key}"
-
-# # Ensure .ssh directory exists
-# mkdir -p ~/.ssh
-# cd ~/.ssh
-
-# # Append Jenkins SSH key to authorized_keys
-# cat "$jenkins_key" >> authorized_keys
-
-# # SSH into backend server
-# ssh -i "$ec2_key" ubuntu@"$FRONTEND_PUBLIC_IP" << 'INNER_SSH'
-
-# # Set up the backend
-# sudo apt update -y
-# sudo apt install -y python3.9 python3.9-venv python3.9-dev git
-
-# # Clone the repository to /home/ubuntu directory
-# git clone https://github.com/Jrsupreme/ecommerce_terraform_deployment.git /home/ubuntu/ecommerce_terraform_deployment
-
-# # Backend setup
-# cd /home/ubuntu/ecommerce_terraform_deployment/backend
-# python3.9 -m venv venv
-# source venv/bin/activate
-# pip install -r requirements.txt
-
-# # Configure Django settings
-# PRIVATE_IP=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)
-# sudo sed -i "s/ALLOWED_HOSTS = \[\]/ALLOWED_HOSTS = ['$PRIVATE_IP']/" my_project/settings.py
-
-# # Apply Django migrations and start server in the background
-# python manage.py migrate
-# nohup python manage.py runserver 0.0.0.0:8000 &
-
-# sleep 3
-
-# exit
-# INNER_SSH
-
-# # Set up the frontend on the main server
-# sudo apt update -y
-# curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
-# sudo apt install -y nodejs git
-
-# # Clone the repository to /home/ubuntu
-# git clone https://github.com/Jrsupreme/ecommerce_terraform_deployment.git /home/ubuntu/ecommerce_terraform_deployment
-
-# sleep 3
-
-# # Navigate to the frontend directory
-# cd /home/ubuntu/ecommerce_terraform_deployment/frontend
-
-# # Modify package.json to set the proxy field
-# sudo sed -i "s|\"proxy\": \"\"|\"proxy\": \"http://$BACKEND_PRIVATE_IP:8000\"|" package.json
-
-# # Install frontend dependencies and start application
-# npm install
-# export NODE_OPTIONS=--openssl-legacy-provider
-# npm start
-# EOF
 
 }
 
@@ -400,35 +331,7 @@ resource "aws_instance" "frontend_server2" {    # Frontend Server 2
     "Name" : "frontend2"         
   }
   subnet_id = aws_subnet.public_subnet_2.id
-#   user_data = <<-EOF
-# #!/bin/bash
 
-# # Fetch the backend private IP dynamically
-# BACKEND_PRIVATE_IP="${aws_instance.backend_server2.private_ip}"
-
-# # Update and install Node.js and Git
-# sudo apt update -y
-# curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
-# sudo apt install -y nodejs git
-
-# # Clone the repository into the home directory
-# git clone https://github.com/Jrsupreme/ecommerce_terraform_deployment.git /home/ubuntu/ecommerce_terraform_deployment
-
-# sleep 3
-
-# # Navigate to the frontend directory
-# cd /home/ubuntu/ecommerce_terraform_deployment/frontend
-
-# # Modify package.json to set the proxy field to the backend's private IP
-# sed -i "s|\"proxy\": \"\"|\"proxy\": \"http://$BACKEND_PRIVATE_IP:8000\"|" package.json
-
-# # Install dependencies
-# npm install
-
-# # Set Node.js options and start the frontend application
-# export NODE_OPTIONS=--openssl-legacy-provider
-# npm start
-# EOF
 }
 
 resource "aws_db_instance" "postgres_db" {

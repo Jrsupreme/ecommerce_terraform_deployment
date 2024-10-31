@@ -1,5 +1,7 @@
+#!/bin/bash
 # Set up the backend
 sudo apt update -y
+sudo add-apt-repository ppa:deadsnakes/ppa -y
 sudo apt install -y python3.9 python3.9-venv python3.9-dev git
 
 # Clone the repository to /home/ubuntu directory
@@ -12,9 +14,10 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 # Configure Django settings
-PRIVATE_IP=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)
-sudo sed -i "s/ALLOWED_HOSTS = \[\]/ALLOWED_HOSTS = ['$PRIVATE_IP']/" my_project/settings.py
+#PRIVATE_IP=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)
+#sudo sed -i "s/ALLOWED_HOSTS = \[\]/ALLOWED_HOSTS = ['$PRIVATE_IP']/" my_project/settings.py
 
 # Apply Django migrations and start server in the background
+python manage.py makemigration
 python manage.py migrate
 nohup python manage.py runserver 0.0.0.0:8000 &

@@ -46,3 +46,14 @@ variable "db_password" {
   type        = string
   default     = "kurac5password"
 }
+
+variable "default_vpc_id" {
+  type = string
+  default = "vpc-0dbbd3fb169953646"
+}
+
+variable "default_route_table_id" {
+  type = string
+  default = "rtb-03271a6641b2a9a7d"
+}
+
